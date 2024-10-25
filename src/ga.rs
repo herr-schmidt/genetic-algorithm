@@ -21,11 +21,14 @@ pub struct Domain {
     pub values: Vec<f64>,
 }
 
+const REAL_MIN: f64 = -1e100;
+const REAL_MAX: f64 = 1e100;
+
 impl Domain {
     pub fn new(category: DomainCategory, values: Option<Vec<f64>>) -> Domain {
         let domain_values: Vec<f64> = match (&category, values) {
             (DomainCategory::Reals | DomainCategory::Integers | DomainCategory::DiscreteSet, Some(v)) => { v }
-            (DomainCategory::Reals, None) => { vec![f64::MIN, f64::MAX] }
+            (DomainCategory::Reals, None) => { vec![REAL_MIN, REAL_MAX] }
             (DomainCategory::Integers, None) => { vec![i64::MIN as f64, i64::MAX as f64] }
             (DomainCategory::DiscreteSet, None) => { panic!("Domain category DiscreteSet was specified, but no set of values was provided.") }
         };
@@ -57,7 +60,7 @@ impl GAOptimizer {
             generations,
             population_size,
             population_matrix: None,
-            rng: thread_rng()
+            rng: thread_rng(),
         }
     }
 
@@ -84,9 +87,9 @@ impl GAOptimizer {
 
     pub fn initialize_population(&mut self) {
         let population_matrix: Vec<Vec<f64>> = vec![(0..self.genes as usize)
-                                                            .map(|i| self.extract_gene_value(i))
-                                                            .collect::<Vec<f64>>()
-                                                        ; self.population_size as usize];
+                                                        .map(|i| self.extract_gene_value(i))
+                                                        .collect::<Vec<f64>>()
+                                                    ; self.population_size as usize];
         self.population_matrix = Option::from(population_matrix);
     }
 }
