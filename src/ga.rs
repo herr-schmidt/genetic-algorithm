@@ -8,8 +8,10 @@ pub struct GAOptimizer {
     pub gene_domains: Vec<Domain>,
     pub generations: i32,
     pub population_size: i32,
-    pub population_matrix: Option<Vec<Vec<f64>>>,
-    pub rng: ThreadRng,
+    pub fitness_function: fn(&Vec<f64>) -> f64,
+    pub best_solution: Vec<f64>,
+    population_matrix: Vec<Vec<f64>>,
+    rng: ThreadRng,
 }
 pub enum DomainCategory {
     Reals,
@@ -53,14 +55,17 @@ impl fmt::Display for Domain {
 }
 
 impl GAOptimizer {
-    pub fn new(genes: i32, gene_domains: Vec<Domain>, generations: i32, population_size: i32) -> GAOptimizer {
+    pub fn new(genes: i32, gene_domains: Vec<Domain>, generations: i32, population_size: i32,
+               fitness_function: fn(&Vec<f64>) -> f64) -> GAOptimizer {
         GAOptimizer {
             genes,
             gene_domains,
             generations,
             population_size,
-            population_matrix: None,
+            population_matrix: vec![],
             rng: thread_rng(),
+            fitness_function,
+            best_solution: vec![],
         }
     }
 
@@ -85,11 +90,27 @@ impl GAOptimizer {
         }
     }
 
-    pub fn initialize_population(&mut self) {
-        let population_matrix: Vec<Vec<f64>> = vec![(0..self.genes as usize)
-                                                        .map(|i| self.extract_gene_value(i))
-                                                        .collect::<Vec<f64>>()
-                                                    ; self.population_size as usize];
-        self.population_matrix = Option::from(population_matrix);
+    fn initialize_population(&mut self) {
+        self.population_matrix = (0..self.population_size as usize).map(|_| {
+            (0..self.genes as usize)
+                .map(|gene_index| self.extract_gene_value(gene_index))
+                .collect::<Vec<f64>>()
+        })
+            .collect();
+    }
+
+    fn compute_population_fitness(&mut self, fitness_values: &mut Vec<f64>) {
+        for (solution_index, solution) in self.population_matrix.iter().enumerate() {
+            fitness_values[solution_index] = (self.fitness_function)(solution);
+        }
+    }
+
+    pub fn run(&mut self) {
+        self.initialize_population();
+        let mut fitness_values = vec![0.; self.population_size as usize];
+        for _ in 0..self.generations {
+            self.compute_population_fitness(&mut fitness_values);
+            println!("{:?}", fitness_values);
+        }
     }
 }
