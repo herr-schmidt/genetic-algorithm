@@ -105,12 +105,35 @@ impl GAOptimizer {
         }
     }
 
+    fn roulette_wheel_selection(&mut self, population_fitness: Vec<f64>) {
+        // build the roulette wheel
+        let cumulative_population_fitness = population_fitness.iter().sum();
+        let mut wheel_probabilities_cdf = vec![];
+        wheel_probabilities_cdf.append(population_fitness[0] / cumulative_population_fitness);
+        for i in 1..wheel_probabilities_cdf.len() {
+            wheel_probabilities_cdf.append(wheel_probabilities_cdf[i - 1] + population_fitness[i] / cumulative_population_fitness);
+        }
+
+        // now use it to select mating individuals
+        let new_population: Vec<Vec<f64>> = vec![];
+
+        while new_population.len() < self.population_size as usize {
+            let parent1_probability = self.rng.gen_range(0. ..1.);
+            let parent2_probability = self.rng.gen_range(0. ..1.);
+
+            // find the parent individuals according to their probability
+            let parent1_index = wheel_probabilities_cdf.iter().position(|p| p > parent1_probability);
+            let parent2_index = wheel_probabilities_cdf.iter().position(|p| p > parent2_probability);
+
+            // TODO complete
+        }
+    }
+
     pub fn run(&mut self) {
         self.initialize_population();
         let mut fitness_values = vec![0.; self.population_size as usize];
         for _ in 0..self.generations {
             self.compute_population_fitness(&mut fitness_values);
-            println!("{:?}", fitness_values);
         }
     }
 }
