@@ -113,6 +113,7 @@ impl GAOptimizer {
                 self.best_solution_fitness = fitness_values[solution_index];
                 self.best_solution = solution.to_vec(); //TODO check if there is a different way to assign
                 println!("New best: {}", self.best_solution_fitness);
+                println!("Solution: {:?}", self.best_solution);
             }
         }
 
