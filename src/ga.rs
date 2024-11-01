@@ -1,8 +1,8 @@
-use std::fmt;
-use std::fmt::Formatter;
-use rand::{thread_rng, Rng};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
+use rand::{thread_rng, Rng};
+use std::fmt;
+use std::fmt::Formatter;
 
 pub struct GAOptimizer {
     pub genes: i32,
@@ -117,11 +117,11 @@ impl GAOptimizer {
             }
         }
 
-
-        // rescale to have only non-negative fitness values
+        // min-max normalize to avoid negative values
         let min_fitness = *fitness_values.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
+        let max_fitness = *fitness_values.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
         for fitness_index in 0..self.population_size as usize {
-            fitness_values[fitness_index] = fitness_values[fitness_index] - min_fitness;
+            fitness_values[fitness_index] = (fitness_values[fitness_index] - min_fitness) / (max_fitness - min_fitness + 1e-6) + 1e-6;
         }
     }
 
@@ -147,10 +147,11 @@ impl GAOptimizer {
 
     fn roulette_wheel_selection(&mut self, population_fitness: &mut Vec<f64>) {
         // build the roulette wheel
-        // TODO fix the issue arising when all individuals are equal (wheel_probabilities_cdf becomes a vector of NaNs)
         let cumulative_population_fitness: f64 = population_fitness.iter().sum();
+
         let mut wheel_probabilities_cdf = vec![];
         wheel_probabilities_cdf.push(population_fitness[0] / cumulative_population_fitness);
+
         for i in 1..population_fitness.len() {
             wheel_probabilities_cdf.push(wheel_probabilities_cdf[i - 1] + population_fitness[i] / cumulative_population_fitness);
         }
@@ -190,7 +191,7 @@ impl GAOptimizer {
     pub fn run(&mut self) {
         self.initialize_population();
         let mut fitness_values = vec![0.; self.population_size as usize];
-        for generation in 0..self.generations {
+        for _ in 0..self.generations {
             self.compute_population_fitness(&mut fitness_values);
             self.roulette_wheel_selection(&mut fitness_values);
         }
