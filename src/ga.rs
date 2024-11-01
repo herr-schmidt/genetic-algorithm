@@ -133,6 +133,24 @@ impl GAOptimizer {
         (offspring1, offspring2)
     }
 
+    fn uniform_crossover(&mut self, parent1: Vec<f64>, parent2: Vec<f64>) -> (Vec<f64>, Vec<f64>) {
+        let mut offspring1: Vec<f64> = vec![0.; parent1.len()];
+        let mut offspring2: Vec<f64> = vec![0.; parent2.len()];
+
+        for i in 0..parent1.len() {
+            let flip: u8 = self.rng.gen_range(0..1);
+            if flip == 0 {
+                offspring1[i] = parent1[i];
+                offspring2[i] = parent2[i];
+            } else {
+                offspring1[i] = parent2[i];
+                offspring2[i] = parent1[i];
+            }
+        }
+
+        (offspring1, offspring2)
+    }
+
     fn mutate(&mut self, chromosome: &mut Vec<f64>) {
         let mut genes_indices: Vec<usize> = (0..self.genes as usize).into_iter().collect();
         genes_indices.shuffle(&mut self.rng);
@@ -176,7 +194,7 @@ impl GAOptimizer {
                 None => { panic!("Could not compute parent 2 index.\nParent 2 probability: {}\nRoulette wheel cdf: {:?}\nPopulation: {:?}", parent2_probability, wheel_probabilities_cdf, self.population_matrix) }
             };
 
-            let (mut offspring1, mut offspring2) = self.single_point_crossover(parent1, parent2);
+            let (mut offspring1, mut offspring2) = self.uniform_crossover(parent1, parent2);
 
             self.mutate(&mut offspring1);
             self.mutate(&mut offspring2);
